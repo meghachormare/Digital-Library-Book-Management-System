@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Digital Library</title>
+
+<style>
+body { margin:0; font-family: Arial; }
+
+/* LOGIN */
+#loginPage {
+    height:100vh;
+    background:url('https://images.unsplash.com/photo-1512820790803-83ca734da794') no-repeat center/cover;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+.login-box {
+    background:white;
+    padding:30px;
+    border-radius:10px;
+    text-align:center;
+}
+
+/* NAVBAR */
+nav {
+    background:#222;
+    color:white;
+    padding:15px;
+    display:flex;
+    justify-content:space-between;
+}
+
+nav button {
+    margin: 5px;
+    padding: 8px 12px;
+    border: none;
+    background: green;
+    color: white;
+    cursor: pointer;
+}
+
+nav button:hover {
+    background: darkgreen;
+}
+
+/* HOME */
+.home {
+    height:90vh;
+    background:url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f') no-repeat center/cover;
+    color:white;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+}
+
+/* DASHBOARD */
+.dashboard {
+    display:none;
+    text-align:center;
+    padding:30px;
+    min-height:100vh;
+    background:url('https://images.unsplash.com/photo-1495446815901-a7297e633e8d') no-repeat center/cover;
+    color:white;
+}
+
+.cards {
+    display:flex;
+    justify-content:center;
+    gap:20px;
+}
+
+.card {
+    background:rgba(0,0,0,0.7);
+    padding:20px;
+    border-radius:10px;
+    width:200px;
+}
+
+/* LIBRARY */
+.library {
+    display:none;
+    text-align:center;
+    padding:20px;
+    min-height:100vh;
+    background:url('https://images.unsplash.com/photo-1507842217343-583bb7270b66') no-repeat center/cover;
+    color:white;
+}
+
+table {
+    margin:auto;
+    border-collapse:collapse;
+    width:60%;
+    background: rgba(255,255,255,0.9);
+    color: black;
+}
+
+th, td {
+    border:1px solid black;
+    padding:10px;
+}
+
+.issuePage {
+    display:none;
+    text-align:center;
+    padding:30px;
+    min-height:100vh;
+    background:url('https://images.unsplash.com/photo-1521587760476-6c12a4b040da') no-repeat center/cover;
+    color:white;
+}
+</style>
+
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="loginPage">
+    <div class="login-box">
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="admin"><br><br>
+        <input type="password" id="password" placeholder="1234"><br><br>
+        <button onclick="login()">Login</button>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div id="mainPage" style="display:none;">
+
+<nav>
+    <h2>📚 Digital Library</h2>
+    <div>
+        <button onclick="showHome()">Home</button>
+        <button onclick="goDashboard()">Dashboard</button>
+        <button onclick="showLibrary()">Manage Books</button>
+        <button onclick="openIssuePage()">Issue Book</button>
+        <button onclick="logout()">Logout</button>
+    </div>
+</nav>
+
+<!-- HOME -->
+<div class="home">
+    <h1>Welcome to Digital Library</h1>
+    <button onclick="goDashboard()">Enter Dashboard</button>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard">
+    <button onclick="goHome()">← Back</button>
+    <h1>Dashboard</h1>
+
+    <div class="cards">
+        <div class="card">
+            <h3>Total Books</h3>
+            <p id="totalBooks">0</p>
+        </div>
+
+        <div class="card">
+            <h3>Manage Books</h3>
+            <button onclick="showLibrary()">Open</button>
+        </div>
+    </div>
+</div>
+
+<!-- LIBRARY -->
+<div class="library">
+    <button onclick="goDashboard()">← Back</button>
+    <button onclick="openIssuePage()">Issue Book</button>
+
+    <h2>Add Book</h2>
+    <input type="text" id="bookName" placeholder="Book Name">
+    <input type="text" id="authorName" placeholder="Author Name">
+    <button onclick="addBook()">Add</button>
+
+    <br><br>
+    <input type="text" id="search" placeholder="Search..." onkeyup="searchBook()">
+
+    <h2>Book List</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Book</th>
+                <th>Author</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="bookList"></tbody>
+    </table>
+</div>
+
+</div>
+
+<!-- ISSUE PAGE -->
+<div class="issuePage" id="issuePage">
+
+    <button onclick="showLibrary()">← Back</button>
+
+    <h1>Issue Book</h1>
+
+    <input type="text" id="studentName" placeholder="Student Name">
+    <input type="text" id="issueBookName" placeholder="Book Name">
+    <button onclick="issueBook()">Issue Book</button>
+
+    <h2>Issued Books</h2>
+   <table>
+    <thead>
+        <tr>
+            <th>Student</th>
+            <th>Book</th>
+            <th>Issue Date</th>
+            <th>Due Date</th>
+            <th>Fine</th>
+            <th>Pay</th>
+            <th>Rating ⭐</th>
+            <th>Favorite ❤️</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody id="issuedList"></tbody>
+</table>
+
+</div>
+
+<script>
+let books = [];
+let issuedBooks = JSON.parse(localStorage.getItem("issuedBooks")) || [];
+
+// LOAD
+window.onload = function() {
+    let data = localStorage.getItem("books");
+    if(data) books = JSON.parse(data);
+
+    displayBooks();
+    displayIssued();
+}
+
+// LOGIN
+function login() {
+    let u = document.getElementById("username").value;
+    let p = document.getElementById("password").value;
+
+    if(u === "admin" && p === "1234") {
+        document.getElementById("loginPage").style.display="none";
+        document.getElementById("mainPage").style.display="block";
+    } else {
+        alert("Wrong login");
+    }
+}
+
+// NAVIGATION
+function goDashboard() {
+    document.querySelector(".home").style.display="none";
+    document.querySelector(".library").style.display="none";
+    document.getElementById("issuePage").style.display="none";
+    document.querySelector(".dashboard").style.display="block";
+}
+
+function goHome() {
+    document.querySelector(".dashboard").style.display="none";
+    document.querySelector(".home").style.display="flex";
+}
+
+function showHome() {
+    document.querySelector(".dashboard").style.display="none";
+    document.querySelector(".library").style.display="none";
+    document.getElementById("issuePage").style.display="none";
+    document.querySelector(".home").style.display="flex";
+}
+
+function showLibrary() {
+    document.querySelector(".dashboard").style.display="none";
+    document.getElementById("issuePage").style.display="none";
+    document.querySelector(".library").style.display="block";
+}
+
+function openIssuePage() {
+    document.querySelector(".library").style.display="none";
+    document.getElementById("issuePage").style.display="block";
+}
+
+// LOGOUT
+function logout() {
+    location.reload();
+}
+
+// BOOK FUNCTIONS
+function addBook() {
+    let name = document.getElementById("bookName").value;
+    let author = document.getElementById("authorName").value;
+
+    fetch("add_book.php", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: `name=${name}&author=${author}`
+    })
+    .then(res => res.text())
+    .then(data => {
+        alert("Book Added in Database ✅");
+    });
+}
+
+function displayBooks() {
+    let list = document.getElementById("bookList");
+    list.innerHTML = "";
+
+    books.forEach((b,i)=>{
+        list.innerHTML += `
+        <tr>
+            <td>${b.name}</td>
+            <td>${b.author}</td>
+            <td><button onclick="deleteBook(${i})">Delete</button></td>
+        </tr>`;
+    });
+
+    document.getElementById("totalBooks").innerText = books.length;
+}
+
+function deleteBook(i){
+    books.splice(i,1);
+    localStorage.setItem("books", JSON.stringify(books));
+    displayBooks();
+}
+
+function searchBook() {
+    let input = document.getElementById("search").value.toLowerCase();
+    let rows = document.querySelectorAll("#bookList tr");
+
+    rows.forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(input) ? "" : "none";
+    });
+}
+
+// ISSUE SYSTEM
+function issueBook() {
+    let student = document.getElementById("studentName").value;
+    let book = document.getElementById("issueBookName").value;
+
+    fetch("issue_book.php", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: `student=${student}&book=${book}`
+    })
+    .then(res => res.text())
+    .then(data => {
+        alert("Book Issued ✅");
+    });
+
+
+    let issueDate = new Date();
+    let dueDate = new Date();
+    dueDate.setDate(issueDate.getDate() + 7);
+
+    issuedBooks.push({
+        student,
+        book,
+        issueDate: issueDate.toLocaleDateString(),
+        dueDate: dueDate.toLocaleDateString(),
+        returned: false
+    });
+
+    localStorage.setItem("issuedBooks", JSON.stringify(issuedBooks));
+
+    alert("Book Issued Successfully 📚");
+    displayIssued();
+}
+
+issuedBooks.push({
+    student,
+    book,
+    issueDate: issueDate.toLocaleDateString(),
+    dueDate: dueDate.toLocaleDateString(),
+    returned: false,
+    fine: 0,
+    finePaid: false,
+    rating: "",
+    fav: false
+});
+
+// DISPLAY ISSUE
+function displayIssued() {
+    let list = document.getElementById("issuedList");
+    list.innerHTML = "";
+
+    let today = new Date();
+
+    issuedBooks.forEach((b, index) => {
+
+        let due = new Date(b.dueDate);
+        let fine = 0;
+
+        if(today > due && !b.returned) {
+            let diff = Math.floor((today - due) / (1000*60*60*24));
+            fine = diff * 5;
+        }
+        list.innerHTML += `
+     <tr>
+           <td>${b.student}</td>
+           <td>${b.book}</td>
+           <td>${b.issueDate}</td>
+           <td>${b.dueDate}</td>
+
+           <td>₹${b.finePaid ? 0 : fine}</td>
+
+    <td>
+        ${fine > 0 && !b.finePaid 
+        ? `<button onclick="payFine(${index})">Pay</button>` 
+        : "Paid ✅"}
+    </td>
+
+    <td>
+        <select onchange="rateBook(${index}, this.value)">
+            <option value="">Rate</option>
+            <option ${b.rating==1?"selected":""}>1</option>
+            <option ${b.rating==2?"selected":""}>2</option>
+            <option ${b.rating==3?"selected":""}>3</option>
+            <option ${b.rating==4?"selected":""}>4</option>
+            <option ${b.rating==5?"selected":""}>5</option>
+        </select>
+    </td>
+
+    <td>
+        <button onclick="toggleFav(${index})">
+            ${b.fav ? "❤️" : "🤍"}
+        </button>
+    </td>
+
+    <td>
+        ${b.returned 
+        ? "Returned ✅" 
+        : `<button onclick="returnBook(${index})">Return</button>`}
+        <br>
+        <button onclick="deleteIssue(${index})">Delete</button>
+    </td>
+</tr>`;
+
+
+    });
+}
+
+// DELETE ISSUE
+function deleteIssue(index){
+    if(confirm("Delete this record?")){
+        issuedBooks.splice(index,1);
+        localStorage.setItem("issuedBooks", JSON.stringify(issuedBooks));
+        displayIssued();
+    }
+}
+
+// RATING
+function rateBook(index, rating){
+    issuedBooks[index].rating = rating;
+    localStorage.setItem("issuedBooks", JSON.stringify(issuedBooks));
+}
+
+// FAVORITE
+function toggleFav(index){
+    issuedBooks[index].fav = !issuedBooks[index].fav;
+    localStorage.setItem("issuedBooks", JSON.stringify(issuedBooks));
+    displayIssued();
+}
+
+// RETURN
+function returnBook(index) {
+    let today = new Date();
+    let due = new Date(issuedBooks[index].dueDate);
+
+    let fine = 0;
+
+    if(today > due){
+        let days = Math.floor((today - due)/(1000*60*60*24));
+        fine = days * 5;
+    }
+
+    issuedBooks[index].returned = true;
+    issuedBooks[index].fine = fine; // 🔥 store fine
+
+    localStorage.setItem("issuedBooks", JSON.stringify(issuedBooks));
+
+    alert("Book Returned ✅ Fine: ₹" + fine);
+    displayIssued();
+}
+
+function payFine(index){
+    issuedBooks[index].finePaid = true;
+    localStorage.setItem("issuedBooks", JSON.stringify(issuedBooks));
+
+    alert("Fine Paid Successfully 💰");
+    displayIssued();
+}
+</script>
+
+</body>
+</html>

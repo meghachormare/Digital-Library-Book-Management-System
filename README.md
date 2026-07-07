@@ -3,6 +3,7 @@
 
 ## Description
 A Digital Library Management System built using HTML, CSS, JavaScript, PHP, and MySQL. It allows users to manage books, issue and return books, calculate fines, and maintain library records.
+
 ###Add Book page
 <img width="1920" height="1080" alt="Screenshot 2026-03-23 142052" src="https://github.com/user-attachments/assets/ab2fb9fa-e992-4042-9b9b-a6a2197c733c" />
 ###issue and return book page
